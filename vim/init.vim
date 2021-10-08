@@ -36,6 +36,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 
 Plug 'rust-lang/rust.vim'
+Plug 'racer-rust/vim-racer'
 
 Plug 'itchyny/lightline.vim'
 Plug 'tpope/vim-fugitive'
@@ -53,6 +54,26 @@ Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
 
 Plug 'gruvbox-community/gruvbox'
 Plug 'chriskempson/base16-vim'
+
+Plug 'othree/yajs.vim'
+Plug 'sbdchd/neoformat'
+Plug 'prettier/vim-prettier', {
+  \ 'do': 'yarn install',
+  \ 'branch': 'release/0.x'
+  \ }
+
+Plug 'pangloss/vim-javascript'
+Plug 'leafgarland/typescript-vim'
+Plug 'peitalin/vim-jsx-typescript'
+Plug 'styled-components/vim-styled-components', { 'branch': 'main' }
+Plug 'jparise/vim-graphql'
+
+autocmd BufWritePre *.js Neoformat
+autocmd BufWritePre,TextChanged,InsertLeave *.js Neoformat
+
+au FileType javascript setlocal formatprg=prettier
+au FileType javascript.jsx setlocal formatprg=prettier
+au FileType typescript setlocal formatprg=prettier\ — parser\ typescript
 
 call plug#end()
 
@@ -89,8 +110,20 @@ let g:go_highlight_format_strings = 1
 let g:go_highlight_variable_declarations = 1
 let g:go_auto_sameids = 1
 
+set hidden
+let g:racer_cmd = "/Users/calin.martinconi/.cargo/bin/racer"
 
 let g:rustfmt_autosave = 1
 let g:rustfmt_emit_files = 1
 let g:rustfmt_fail_silently = 0
 let g:rust_clip_command = 'xclip -selection clipboard'
+
+augroup Racer
+    autocmd!
+    autocmd FileType rust nmap <buffer> ggd         <Plug>(rust-def)
+    autocmd FileType rust nmap <buffer> gs         <Plug>(rust-def-split)
+    autocmd FileType rust nmap <buffer> gx         <Plug>(rust-def-vertical)
+    autocmd FileType rust nmap <buffer> gt         <Plug>(rust-def-tab)
+    autocmd FileType rust nmap <buffer> <leader>gd <Plug>(rust-doc)
+    autocmd FileType rust nmap <buffer> <leader>gD <Plug>(rust-doc-tab)
+augroup END
