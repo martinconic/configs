@@ -19,7 +19,7 @@ Plug 'dense-analysis/ale'
 call plug#end()
 
 " set termguicolors
-colorscheme blue
+"colorscheme blue
 
 map <C-g> :NERDTreeToggle<CR>
 nmap <C-t> :TagbarToogle<CR>	
