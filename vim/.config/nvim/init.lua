@@ -1,11 +1,11 @@
--- init.lua for Neovim
--- This configuration uses lazy.nvim as the plugin manager.
--- It includes support for Rust and Golang via LSP, Treesitter for syntax highlighting,
--- Autocompletion, Telescope for search, and other useful plugins for programmers.
+-- init.lua
+-- Final corrected version: Clean structure with the reliable autocmd LSP keymap method.
 
--- Bootstrap lazy.nvim if not installed
+-- -----------------------------------------------------------------------------
+-- 1. BOOTSTRAP LAZY.NVIM (Package Manager)
+-- -----------------------------------------------------------------------------
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.uv.fs_stat(lazypath) then
+if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -17,242 +17,202 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Set leader key
+-- -----------------------------------------------------------------------------
+-- 2. GLOBAL OPTIONS & KEYMAPS
+-- -----------------------------------------------------------------------------
+-- Leader Key
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Basic settings
-vim.opt.number = true         -- Show line numbers
-vim.opt.relativenumber = true -- Relative line numbers
-vim.opt.tabstop = 4           -- Tab width
-vim.opt.shiftwidth = 4        -- Indent width
-vim.opt.expandtab = true      -- Use spaces instead of tabs
-vim.opt.smartindent = true    -- Smart indenting
-vim.opt.wrap = false          -- No line wrap
-vim.opt.hlsearch = false      -- No highlight on search
-vim.opt.incsearch = true      -- Incremental search
-vim.opt.termguicolors = true  -- True color support
-vim.opt.scrolloff = 8         -- Keep 8 lines above/below cursor
-vim.opt.signcolumn = "yes"    -- Always show sign column
-vim.opt.updatetime = 50       -- Faster update time
---vim.opt.colorcolumn = "80"    -- Column ruler at 80 chars
+-- Editor Options
+vim.opt.number = true             -- Show line numbers
+vim.opt.relativenumber = true     -- Show relative line numbers
+vim.opt.signcolumn = "yes"        -- Always show the sign column
+vim.opt.clipboard = "unnamedplus" -- Use system clipboard
+vim.opt.termguicolors = true      -- Enable 24-bit RGB colors
+vim.opt.mouse = "a"               -- Enable mouse support
 
--- Install plugins with lazy.nvim
+-- Indentation & Search
+vim.opt.tabstop = 4               -- Spaces for a <Tab>
+vim.opt.shiftwidth = 4            -- Spaces for autoindent
+vim.opt.expandtab = true          -- Use spaces instead of tabs
+vim.opt.smartindent = true        -- Smart indentation
+vim.opt.ignorecase = true         -- Ignore case in search
+vim.opt.smartcase = true          -- Smart case in search
+vim.opt.incsearch = true          -- Incremental search
+vim.opt.hlsearch = false          -- Don't highlight all search results
+
+-- Behavior & UI
+vim.opt.wrap = false              -- No line wrap
+vim.opt.scrolloff = 8             -- Context lines around cursor
+vim.opt.updatetime = 50           -- Faster completion
+vim.opt.undofile = true           -- Persist undo history
+vim.opt.undodir = vim.fn.stdpath("data") .. "/undodir"
+
+-- Custom Keymaps
+local keymap = vim.keymap.set
+keymap({"n", "v"}, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
+keymap("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
+
+-- -----------------------------------------------------------------------------
+-- 3. PLUGINS (via lazy.nvim)
+-- -----------------------------------------------------------------------------
 require("lazy").setup({
-  -- Treesitter for syntax highlighting and more
+  --
+  -- THEME & UI
+  --
+  {
+    "EdenEast/nightfox.nvim",
+    lazy = false,
+    priority = 1000, -- Make sure theme loads first
+    config = function()
+      require("nightfox").setup()
+      vim.cmd.colorscheme "nightfox"
+    end,
+  },
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("lualine").setup({ options = { theme = "auto" } })
+    end,
+  },
+  {
+    "akinsho/bufferline.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function() require("bufferline").setup({}) end,
+  },
+  {
+    "nvim-tree/nvim-tree.lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { desc = "Toggle File Explorer" })
+      require("nvim-tree").setup({ actions = { open_file = { quit_on_open = false } } })
+    end,
+  },
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    config = function() require("ibl").setup() end,
+  },
+
+  --
+  -- CORE FUNCTIONALITY & LANGUAGE SUPPORT
+  --
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "rust", "go", "lua", "vim", "vimdoc", "query" },
-        sync_install = false,
+        ensure_installed = { "c", "lua", "vim", "rust", "go", "gomod", "toml" },
         auto_install = true,
         highlight = { enable = true },
-        incremental_selection = { enable = true },
-        textobjects = { enable = true },
       })
     end,
   },
-
-  -- Treesitter Context (sticky headers for functions/classes)
   {
-    "nvim-treesitter/nvim-treesitter-context",
-    config = function()
-      require("treesitter-context").setup()
-    end,
-  },
-
-  -- LSP support
-  {
+    -- ‼️ THIS IS THE CORRECTED LSP SETUP ‼️
     "neovim/nvim-lspconfig",
     dependencies = {
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
-      "hrsh7th/nvim-cmp",
-      "hrsh7th/cmp-nvim-lsp",
-      "L3MON4D3/LuaSnip",
     },
     config = function()
+      -- Setup mason and mason-lspconfig
       require("mason").setup()
       require("mason-lspconfig").setup({
         ensure_installed = { "rust_analyzer", "gopls", "lua_ls" },
         handlers = {
+          -- The default handler installs the server and calls setup without any special args.
+          -- We will attach keymaps globally using the autocommand below.
           function(server_name)
             require("lspconfig")[server_name].setup({})
           end,
         },
       })
 
-      -- Autocompletion setup
-      local cmp = require("cmp")
-      cmp.setup({
-        snippet = {
-          expand = function(args)
-            require("luasnip").lsp_expand(args.body)
-          end,
-        },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<C-Space>"] = cmp.mapping.complete(),
-          ["<C-e>"] = cmp.mapping.abort(),
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
-        }),
-        sources = cmp.config.sources({
-          { name = "nvim_lsp" },
-          { name = "luasnip" },
-        }, {
-          { name = "buffer" },
-        }),
-      })
-
-      -- LSP keybindings
+      -- This global autocommand is the reliable way to attach LSP keymaps for your setup.
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", {}),
         callback = function(ev)
-          local opts = { buffer = ev.buf }
-          vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-          vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-          vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-          vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-          vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-          vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-          vim.keymap.set("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, opts)
-          vim.keymap.set("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, opts)
-          vim.keymap.set("n", "<leader>wl", function()
-            print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-          end, opts)
-          vim.keymap.set("n", "<leader>D", vim.lsp.buf.type_definition, opts)
-          vim.keymap.set("n", "<leader>ds", vim.lsp.buf.document_symbol, opts)
-          vim.keymap.set("n", "<leader>ws", vim.lsp.buf.workspace_symbol, opts)
+          local opts = { buffer = ev.buf, noremap = true, silent = true }
+          local keymap = vim.keymap.set
+
+          keymap("n", "gd", vim.lsp.buf.definition, opts)
+          keymap("n", "gr", vim.lsp.buf.references, opts)
+          keymap("n", "gi", vim.lsp.buf.implementation, opts)
+          keymap("n", "K", vim.lsp.buf.hover, opts)
+          keymap("n", "<leader>rn", vim.lsp.buf.rename, opts)
+          keymap({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
         end,
       })
     end,
   },
 
-  -- Telescope for fuzzy finding and search
+  --
+  -- AUTOCOMPLETION
+  --
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path",
+      "L3MON4D3/LuaSnip", "saadparwaiz1/cmp_luasnip",
+    },
+    config = function()
+      local cmp = require("cmp")
+      cmp.setup({
+        snippet = { expand = function(args) require("luasnip").lsp_expand(args.body) end },
+        mapping = cmp.mapping.preset.insert({
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-n>"] = cmp.mapping.select_next_item(),
+          ["<C-p>"] = cmp.mapping.select_prev_item(),
+        }),
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" }, { name = "luasnip" },
+          { name = "buffer" }, { name = "path" },
+        }),
+      })
+    end,
+  },
+
+  --
+  -- "GOOD SEARCH" - Fuzzy Finder
+  --
   {
     "nvim-telescope/telescope.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>pf", builtin.find_files, {})
-      vim.keymap.set("n", "<C-p>", builtin.git_files, {})
-      vim.keymap.set("n", "<leader>ps", function()
-        builtin.grep_string({ search = vim.fn.input("Grep > ") })
-      end)
-      vim.keymap.set("n", "<leader>vh", builtin.help_tags, {})
-      vim.keymap.set("n", "<leader>pb", builtin.buffers, {})
-      vim.keymap.set("n", "<leader>pd", builtin.diagnostics, {})
-
-      -- Override for fuzzy symbol search (popup instead of bottom list)
-      vim.keymap.set("n", "<leader>ds", builtin.lsp_document_symbols, {})
-      vim.keymap.set("n", "<leader>ws", builtin.lsp_workspace_symbols, {})
-    end,
-  },
-
-  -- File explorer
-  {
-    "nvim-tree/nvim-tree.lua",
-    config = function()
-      require("nvim-tree").setup({
-        actions = {
-          open_file = {
-            quit_on_open = false,  -- Explicitly keep tree open on file open
-            window_picker = {
-              enable = true,  -- Helps pick the window to open in
-            },
-          },
+      require("telescope").setup({
+        defaults = {
+          layout_strategy = "horizontal",
+          layout_config = { prompt_position = "top" },
         },
       })
-      vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>")
+
+      local builtin = require("telescope.builtin")
+      vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find Files" })
+      vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live Grep" })
+      vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Find Buffers" })
+      vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Find Symbols in File" })
+      vim.keymap.set("n", "<leader>fS", builtin.lsp_workspace_symbols, { desc = "Find Symbols in Project" })
     end,
   },
 
-  -- Statusline
+  --
+  -- LANGUAGE-SPECIFIC & GIT
+  --
+  { "lewis6991/gitsigns.nvim", config = function() require("gitsigns").setup() end },
   {
-    "nvim-lualine/lualine.nvim",
-    config = function()
-      require("lualine").setup({})
-    end,
+    "saecki/crates.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function() require("crates").setup() end,
+    ft = { "toml" },
   },
 
-  -- Git integration
-  {
-    "lewis6991/gitsigns.nvim",
-    config = function()
-      require("gitsigns").setup()
-    end,
-  },
-
-  -- Commenting
-  {
-    "numToStr/Comment.nvim",
-    config = function()
-      require("Comment").setup()
-    end,
-  },
-
-  -- Indent guides
-  {
-    "lukas-reineke/indent-blankline.nvim",
-    main = "ibl",
-    config = function()
-      require("ibl").setup()
-    end,
-  },
-
-  -- Autopairs
-  {
-    "windwp/nvim-autopairs",
-    config = function()
-      require("nvim-autopairs").setup({})
-    end,
-  },
-
-  -- Bufferline
-  {
-    "akinsho/bufferline.nvim",
-    config = function()
-      require("bufferline").setup({})
-    end,
-  },
-
-  -- Nightfox theme
-  {
-    "EdenEast/nightfox.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      require("nightfox").setup({
-        -- You can customize options here if needed, e.g., transparent background
-        -- options = { transparent = true },
-      })
-    end,
-  },
+  --
+  -- OTHER GOODIES
+  --
+  { "windwp/nvim-autopairs", event = "InsertEnter", config = function() require("nvim-autopairs").setup({}) end },
+  { "numToStr/Comment.nvim", config = function() require("Comment").setup() end },
 })
-
--- Additional keybindings
-vim.keymap.set("n", "<leader>pv", vim.cmd.Ex) -- Open netrw
-vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv") -- Move lines down
-vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv") -- Move lines up
-vim.keymap.set("n", "J", "mzJ`z")             -- Join lines without moving cursor
-vim.keymap.set("n", "<C-d>", "<C-d>zz")       -- Half page down with centering
-vim.keymap.set("n", "<C-u>", "<C-u>zz")       -- Half page up with centering
-vim.keymap.set("n", "n", "nzzzv")             -- Next search with centering
-vim.keymap.set("n", "N", "Nzzzv")             -- Prev search with centering
-
--- Yank to system clipboard
-vim.keymap.set({"n", "v"}, "<leader>y", [["+y]])
-vim.keymap.set("n", "<leader>Y", [["+Y]])
-
--- Other settings
-vim.opt.clipboard = "unnamedplus" -- Use system clipboard
-vim.opt.ignorecase = true         -- Ignore case in search
-vim.opt.smartcase = true          -- Override ignorecase if uppercase
-
--- Apply Nightfox colorscheme (default variant: nightfox; change to "dayfox", "nordfox", etc. if desired)
-vim.cmd.colorscheme "nightfox"
-
--- End of init.lua
