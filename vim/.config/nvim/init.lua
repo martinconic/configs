@@ -51,6 +51,7 @@ vim.opt.undodir = vim.fn.stdpath("data") .. "/undodir"
 
 -- Custom Keymaps
 local keymap = vim.keymap.set
+keymap("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "Close Buffer" })
 keymap({"n", "v"}, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
 keymap("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
 
@@ -61,15 +62,15 @@ require("lazy").setup({
   --
   -- THEME & UI
   --
-  {
-    "EdenEast/nightfox.nvim",
-    lazy = false,
-    priority = 1000, -- Make sure theme loads first
-    config = function()
-      require("nightfox").setup()
-      vim.cmd.colorscheme "nightfox"
-    end,
-  },
+  -- {
+  --   "EdenEast/nightfox.nvim",
+  --   lazy = false,
+  --   priority = 1000, -- Make sure theme loads first
+  --   config = function()
+  --     require("nightfox").setup()
+  --     vim.cmd.colorscheme "nightfox"
+  --   end,
+  -- },
   {
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
