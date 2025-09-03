@@ -71,6 +71,19 @@ require("lazy").setup({
   --     vim.cmd.colorscheme "nightfox"
   --   end,
   -- },
+-- Add this to your lazy.setup block
+  {
+    "Mofiqul/vscode.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require("vscode").setup({
+        -- You can configure style here, e.g., 'dark' or 'light'
+        style = 'dark',
+      })
+      require("vscode").load()
+    end,
+  },
   {
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
