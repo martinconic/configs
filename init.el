@@ -1,97 +1,130 @@
-(require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
-(package-refresh-contents)
+;;; init.el --- A modern Emacs config for Rust/Go/C/Zig dev -*- lexical-binding: t; -*-
 
+;; =============================================================================
+;; 1. BOOTSTRAP PACKAGE MANAGEMENT
+;; =============================================================================
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
+;; Bootstrap use-package
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
 
-(use-package rustic
-  :ensure
-  :bind (:map rustic-mode-map
-              ("M-j" . lsp-ui-imenu)
-              ("M-?" . lsp-find-references)
-              ("C-c C-c l" . flycheck-list-errors)
-              ("C-c C-c a" . lsp-execute-code-action)
-              ("C-c C-c r" . lsp-rename)
-              ("C-c C-c q" . lsp-workspace-restart)
-              ("C-c C-c Q" . lsp-workspace-shutdown)
-              ("C-c C-c s" . lsp-rust-analyzer-status))
+(eval-when-compile (require 'use-package))
+(setq use-package-always-ensure t)
+
+;; =============================================================================
+;; 2. UI & THEME
+;; =============================================================================
+(setq-default indent-tabs-mode nil tab-width 4)
+
+;; Only disable GUI elements if Emacs is running in a graphical session
+(when (display-graphic-p)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1))
+
+(xterm-mouse-mode 1)
+(global-display-line-numbers-mode 1)
+
+(use-package doom-themes
+  :init (load-theme 'doom-gruvbox t)) ; Corrected theme name
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1))
+
+(use-package all-the-icons) ; For icons in the modeline and treemacs
+
+(use-package projectile
+  :init (projectile-mode +1))
+
+(use-package treemacs
+  :after (projectile)
   :config
-  ;; uncomment for less flashiness
-  ;; (setq lsp-eldoc-hook nil)
-  ;; (setq lsp-enable-symbol-highlighting nil)
-  ;; (setq lsp-signature-auto-activate nil)
+  (treemacs-follow-mode 1)
+  (treemacs-project-follow-mode 1))
 
-  ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t)
-  (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+(use-package treemacs-projectile
+  :after (treemacs projectile)
+  :bind
+  ("C-c t" . treemacs-projectile))
 
-(defun rk/rustic-mode-hook ()
-  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
-  ;; save rust buffers that are not file visiting. Once
-  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
-  ;; no longer be necessary.
-  (when buffer-file-name
-    (setq-local buffer-save-without-query t))
-  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+;; =============================================================================
+;; 3. FUZZY FINDER & COMPLETION
+;; =============================================================================
+(use-package vertico
+  :init (vertico-mode))
 
+(use-package consult) ; Provides powerful search commands
+
+(use-package marginalia
+  :after vertico
+  :init (marginalia-mode))
+
+(use-package company
+  :hook (prog-mode . company-mode)
+  :config
+  (setq company-minimum-prefix-length 1
+        company-idle-delay 0.0))
+
+;; =============================================================================
+;; 4. LANGUAGE SUPPORT (LSP)
+;; =============================================================================
 (use-package lsp-mode
-  :ensure
-  :commands lsp
-  :custom
-  ;; what to use when checking on-save. "check" is default, I prefer clippy
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
-  (lsp-eldoc-render-all t)
-  (lsp-idle-delay 0.6)
-  ;; enable / disable the hints as you prefer:
-  (lsp-rust-analyzer-server-display-inlay-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
-  (lsp-rust-analyzer-display-chaining-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
-  (lsp-rust-analyzer-display-closure-return-type-hints t)
-  (lsp-rust-analyzer-display-parameter-hints nil)
-  (lsp-rust-analyzer-display-reborrow-hints nil)
+  :commands (lsp lsp-deferred)
+  :hook ((go-mode . lsp-deferred)
+         (rustic-mode . lsp-deferred)
+         (c-mode . lsp-deferred)
+         (c++-mode . lsp-deferred)
+         (zig-mode . lsp-deferred))
   :config
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  (setq lsp-prefer-flymake nil))
 
+;; C/C++ Support
+(use-package cc-mode
+  :ensure nil) ; Built-in
 
-;Golang config
+;; Zig Support
+(use-package zig-mode
+  :mode "\\.zig\\'")
 
-(require 'lsp-mode)
-(add-hook 'go-mode-hook #'lsp-deferred)
+;; Rust Support
+(use-package rustic
+  :mode "\\.rs\\'")
 
-;; Set up before-save hooks to format buffer and add/delete imports.
-;; Make sure you don't have other gofmt/goimports hooks enabled.
-(defun lsp-go-install-save-hooks ()
-  (add-hook 'before-save-hook #'lsp-format-buffer t t)
-  (add-hook 'before-save-hook #'lsp-organize-imports t t))
-(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+;; Go Support
+(use-package go-mode
+  :mode "\\.go\\'")
 
-(add-hook 'go-mode-hook #'lsp-deferred)
+;; =============================================================================
+;; 5. OTHER GOODIES
+;; =============================================================================
+(use-package magit
+  :defer t)
 
+(use-package which-key
+  :init (which-key-mode))
 
-(add-to-list 'load-path "/place/where/you/put/it/")
-(autoload 'go-mode "go-mode" nil t)
-(add-to-list 'auto-mode-alist '("\\.go\\'" . go-mode))
+(use-package undo-tree
+  :init (global-undo-tree-mode))
 
-; Flutter and Dart
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-(package-initialize)
+;; In Section 2, after (global-display-line-numbers-mode 1)
+(global-set-key (kbd "C-c SPC") 'set-mark-command)
 
-(setq package-selected-packages 
-  '(dart-mode lsp-mode lsp-dart lsp-treemacs flycheck company
-    ;; Optional packages
-    lsp-ui company hover))
+(electric-pair-mode 1)
 
-(when (cl-find-if-not #'package-installed-p package-selected-packages)
-  (package-refresh-contents)
-  (mapc #'package-install package-selected-packages))
-
-(add-hook 'dart-mode-hook 'lsp)
-
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024))
+;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

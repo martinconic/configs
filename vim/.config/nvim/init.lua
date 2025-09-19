@@ -71,19 +71,31 @@ require("lazy").setup({
   --     vim.cmd.colorscheme "nightfox"
   --   end,
   -- },
+
 -- Add this to your lazy.setup block
-  {
-    "Mofiqul/vscode.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      require("vscode").setup({
-        -- You can configure style here, e.g., 'dark' or 'light'
-        style = 'dark',
-      })
-      require("vscode").load()
-    end,
-  },
+{
+  "sainnhe/gruvbox-material",
+  lazy = false,
+  priority = 1000,
+  config = function()
+    vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
+    vim.cmd.colorscheme "gruvbox-material"
+  end,
+},
+
+-- Add this to your lazy.setup block
+  -- {
+  --   "Mofiqul/vscode.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     require("vscode").setup({
+  --       -- You can configure style here, e.g., 'dark' or 'light'
+  --       style = 'dark',
+  --     })
+  --     require("vscode").load()
+  --   end,
+  -- },
   {
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -118,7 +130,7 @@ require("lazy").setup({
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "c", "lua", "vim", "rust", "go", "gomod", "toml" },
+        ensure_installed = { "c", "lua", "vim", "rust", "go", "gomod", "toml", "zig" },
         auto_install = true,
         highlight = { enable = true },
       })
@@ -135,7 +147,7 @@ require("lazy").setup({
       -- Setup mason and mason-lspconfig
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "rust_analyzer", "gopls", "lua_ls" },
+        ensure_installed = { "rust_analyzer", "gopls", "lua_ls", "zls", "clangd" },
         handlers = {
           -- The default handler installs the server and calls setup without any special args.
           -- We will attach keymaps globally using the autocommand below.
