@@ -31,6 +31,7 @@ vim.opt.signcolumn = "yes"        -- Always show the sign column
 vim.opt.clipboard = "unnamedplus" -- Use system clipboard
 vim.opt.termguicolors = true      -- Enable 24-bit RGB colors
 vim.opt.mouse = "a"               -- Enable mouse support
+vim.opt.cursorline = true
 
 -- Indentation & Search
 vim.opt.tabstop = 4               -- Spaces for a <Tab>
@@ -68,7 +69,7 @@ require("lazy").setup({
   --   priority = 1000, -- Make sure theme loads first
   --   config = function()
   --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "nightfox"
+  --     vim.cmd.colorscheme "dayfox"
   --   end,
   -- },
 
@@ -100,7 +101,17 @@ require("lazy").setup({
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
-      require("lualine").setup({ options = { theme = "auto" } })
+      require("lualine").setup({
+        options = { theme = "auto" },
+        sections = {
+          lualine_c = {
+            {
+              'filename',
+              path = 1, -- 0 = filename only, 1 = relative path, 2 = absolute path
+            }
+          },
+        },
+      })
     end,
   },
   {
@@ -186,13 +197,32 @@ require("lazy").setup({
     },
     config = function()
       local cmp = require("cmp")
+      local luasnip = require("luasnip")
+
       cmp.setup({
         snippet = { expand = function(args) require("luasnip").lsp_expand(args.body) end },
+        
         mapping = cmp.mapping.preset.insert({
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
           ["<C-n>"] = cmp.mapping.select_next_item(),
           ["<C-p>"] = cmp.mapping.select_prev_item(),
+          
+          -- Add Tab/Shift-Tab to jump to the next/previous placeholder
+          ["<Tab>"] = cmp.mapping(function(fallback)
+            if luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+          ["<S-Tab>"] = cmp.mapping(function(fallback)
+            if luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" }, { name = "luasnip" },
@@ -222,6 +252,7 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Find Buffers" })
       vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Find Symbols in File" })
       vim.keymap.set("n", "<leader>fS", builtin.lsp_workspace_symbols, { desc = "Find Symbols in Project" })
+      vim.keymap.set("n", "<leader>d", builtin.diagnostics, { desc = "Show Diagnostics" })
     end,
   },
 
