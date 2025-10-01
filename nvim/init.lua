@@ -31,7 +31,27 @@ vim.opt.signcolumn = "yes"        -- Always show the sign column
 vim.opt.clipboard = "unnamedplus" -- Use system clipboard
 vim.opt.termguicolors = true      -- Enable 24-bit RGB colors
 vim.opt.mouse = "a"               -- Enable mouse support
-vim.opt.cursorline = true
+
+-- vim.opt.cursorline = true
+
+-- Customize cursor for different modes (focus on insert mode visibility)
+vim.opt.guicursor = {
+  'n-v-c-sm:block-Cursor',          -- Normal/visual/command/select: block cursor
+  'i-ci-ve:ver50-iCursor',          -- Insert: thin vertical bar (adjust 'ver25' for thickness)
+  'r-cr-o:hor20-Cursor',            -- Replace: horizontal bar
+  'a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor',  -- Blinking settings
+}
+
+-- Define highlight groups (set insert cursor to black for light theme contrast)
+vim.api.nvim_set_hl(0, 'Cursor', { fg = '#ffffff', bg = '#ff0000' })  -- Red for normal mode (adjust as needed)
+vim.api.nvim_set_hl(0, 'iCursor', { bg = '#000000' })  -- Black vertical bar in insert mode
+
+-- Optional: Reset cursor on exit to avoid affecting the terminal
+vim.api.nvim_create_autocmd('VimLeave', {
+  callback = function()
+    vim.opt.guicursor = 'a:ver25'
+  end,
+})
 
 -- Indentation & Search
 vim.opt.tabstop = 4               -- Spaces for a <Tab>
@@ -62,7 +82,7 @@ keymap("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
 require("lazy").setup({
   --
   -- THEME & UI
-  --
+  --  
   -- {
   --   "EdenEast/nightfox.nvim",
   --   lazy = false,
@@ -85,6 +105,22 @@ require("lazy").setup({
 },
 
 -- Add this to your lazy.setup block
+-- {
+--   "projekt0n/github-nvim-theme",
+--   lazy = false,
+--   priority = 1000,
+--   config = function()
+--     -- The setup function can be minimal or empty now
+--     require("github-theme").setup({
+--       -- All options are optional
+--     })
+--
+--     -- ‼️ Change the theme name here to select a style
+--     vim.cmd("colorscheme github_dark_default")
+--   end,
+-- },
+
+-- Add this to your lazy.setup block
   -- {
   --   "Mofiqul/vscode.nvim",
   --   lazy = false,
@@ -97,6 +133,7 @@ require("lazy").setup({
   --     require("vscode").load()
   --   end,
   -- },
+
   {
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
