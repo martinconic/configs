@@ -89,7 +89,7 @@ require("lazy").setup({
   --   priority = 1000, -- Make sure theme loads first
   --   config = function()
   --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "dayfox"
+  --     vim.cmd.colorscheme "nightfox"
   --   end,
   -- },
 
