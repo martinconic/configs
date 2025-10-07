@@ -43,7 +43,7 @@ vim.opt.guicursor = {
 }
 
 -- Define highlight groups (set insert cursor to black for light theme contrast)
-vim.api.nvim_set_hl(0, 'Cursor', { fg = '#ffffff', bg = '#ff0000' })  -- Red for normal mode (adjust as needed)
+vim.api.nvim_set_hl(0, 'Cursor', { fg = '#ffffff', bg = '#ffffff' })  -- White for normal mode (adjust as needed)
 vim.api.nvim_set_hl(0, 'iCursor', { bg = '#000000' })  -- Black vertical bar in insert mode
 
 -- Optional: Reset cursor on exit to avoid affecting the terminal
@@ -75,7 +75,7 @@ local keymap = vim.keymap.set
 keymap("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "Close Buffer" })
 keymap({"n", "v"}, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
 keymap("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
-
+keymap("n", "<leader>gg", "<cmd>Neogit<CR>", { desc = "Open Neogit" })
 -- -----------------------------------------------------------------------------
 -- 3. PLUGINS (via lazy.nvim)
 -- -----------------------------------------------------------------------------
@@ -83,26 +83,26 @@ require("lazy").setup({
   --
   -- THEME & UI
   --  
-  -- {
-  --   "EdenEast/nightfox.nvim",
-  --   lazy = false,
-  --   priority = 1000, -- Make sure theme loads first
-  --   config = function()
-  --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "nightfox"
-  --   end,
-  -- },
+  {
+    "EdenEast/nightfox.nvim",
+    lazy = false,
+    priority = 1000, -- Make sure theme loads first
+    config = function()
+      require("nightfox").setup()
+      vim.cmd.colorscheme "dayfox"
+    end,
+  },
 
 -- Add this to your lazy.setup block
-{
-  "sainnhe/gruvbox-material",
-  lazy = false,
-  priority = 1000,
-  config = function()
-    vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
-    vim.cmd.colorscheme "gruvbox-material"
-  end,
-},
+-- {
+--   "sainnhe/gruvbox-material",
+--   lazy = false,
+--   priority = 1000,
+--   config = function()
+--     vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
+--     vim.cmd.colorscheme "gruvbox-material"
+--   end,
+-- },
 
 -- Add this to your lazy.setup block
 -- {
@@ -290,13 +290,52 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Find Symbols in File" })
       vim.keymap.set("n", "<leader>fS", builtin.lsp_workspace_symbols, { desc = "Find Symbols in Project" })
       vim.keymap.set("n", "<leader>d", builtin.diagnostics, { desc = "Show Diagnostics" })
+      vim.keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "Search Git Commits" })
+      vim.keymap.set("n", "<leader>gB", builtin.git_branches, { desc = "Search Git Branches" })
     end,
   },
 
   --
   -- LANGUAGE-SPECIFIC & GIT
   --
-  { "lewis6991/gitsigns.nvim", config = function() require("gitsigns").setup() end },
+{
+  "lewis6d991/gitsigns.nvim",
+  config = function()
+    require("gitsigns").setup({
+      -- This on_attach function runs whenever gitsigns is active on a file
+      on_attach = function(bufnr)
+        -- Get the gitsigns API
+        local gs = package.loaded.gitsigns
+
+        -- Helper function to set a keymap only for the current buffer
+        local function map(mode, l, r, opts)
+          opts = opts or {}
+          opts.buffer = bufnr
+          vim.keymap.set(mode, l, r, opts)
+        end
+
+        -- Your requested keymap for blaming a line
+        -- NOTE: I've used <leader>gB (capital B) to avoid the conflict with your
+        -- Telescope shortcut for Git branches (<leader>gb) that we discussed.
+        map("n", "<leader>gb", gs.blame_line, { desc = "Blame Line" })
+      end,
+    })
+  end,
+},
+
+    -- Add this with your other plugins, for example, after gitsigns
+  {
+    "NeogitOrg/neogit",
+    dependencies = {
+      "nvim-lua/plenary.nvim",         -- required
+      "nvim-telescope/telescope.nvim", -- optional
+      "sindrets/diffview.nvim",        -- optional
+    },
+    config = true
+  },
+
+
+
   {
     "saecki/crates.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
