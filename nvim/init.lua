@@ -83,26 +83,26 @@ require("lazy").setup({
   --
   -- THEME & UI
   --  
-  {
-    "EdenEast/nightfox.nvim",
-    lazy = false,
-    priority = 1000, -- Make sure theme loads first
-    config = function()
-      require("nightfox").setup()
-      vim.cmd.colorscheme "dayfox"
-    end,
-  },
+  -- {
+  --   "EdenEast/nightfox.nvim",
+  --   lazy = false,
+  --   priority = 1000, -- Make sure theme loads first
+  --   config = function()
+  --     require("nightfox").setup()
+  --     vim.cmd.colorscheme "dayfox"
+  --   end,
+  -- },
 
 -- Add this to your lazy.setup block
--- {
---   "sainnhe/gruvbox-material",
---   lazy = false,
---   priority = 1000,
---   config = function()
---     vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
---     vim.cmd.colorscheme "gruvbox-material"
---   end,
--- },
+{
+  "sainnhe/gruvbox-material",
+  lazy = false,
+  priority = 1000,
+  config = function()
+    vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
+    vim.cmd.colorscheme "gruvbox-material"
+  end,
+},
 
 -- Add this to your lazy.setup block
 -- {
@@ -133,6 +133,7 @@ require("lazy").setup({
   --     require("vscode").load()
   --   end,
   -- },
+
 
   {
     "nvim-lualine/lualine.nvim",
@@ -299,7 +300,7 @@ require("lazy").setup({
   -- LANGUAGE-SPECIFIC & GIT
   --
 {
-  "lewis6d991/gitsigns.nvim",
+  "lewis6991/gitsigns.nvim",
   config = function()
     require("gitsigns").setup({
       -- This on_attach function runs whenever gitsigns is active on a file
