@@ -179,7 +179,7 @@ require("lazy").setup({
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "c", "lua", "vim", "rust", "go", "gomod", "toml", "zig" },
+        ensure_installed = { "c", "lua", "vim", "rust", "go", "gomod", "toml", "zig", "odin" },
         auto_install = true,
         highlight = { enable = true },
       })
@@ -196,7 +196,7 @@ require("lazy").setup({
       -- Setup mason and mason-lspconfig
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "rust_analyzer", "gopls", "lua_ls", "zls", "clangd" },
+        ensure_installed = { "rust_analyzer", "gopls", "lua_ls", "zls", "clangd", "ols" },
         handlers = {
           -- The default handler installs the server and calls setup without any special args.
           -- We will attach keymaps globally using the autocommand below.
