@@ -83,26 +83,28 @@ require("lazy").setup({
   --
   -- THEME & UI
   --  
-  -- {
-  --   "EdenEast/nightfox.nvim",
-  --   lazy = false,
-  --   priority = 1000, -- Make sure theme loads first
-  --   config = function()
-  --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "dayfox"
-  --   end,
-  -- },
+  {
+    "EdenEast/nightfox.nvim",
+    lazy = false,
+    priority = 1000, -- Make sure theme loads first
+    config = function()
+      require("nightfox").setup()
+      vim.cmd.colorscheme "dayfox"
+    end,
+  },
 
 -- Add this to your lazy.setup block
-{
-  "sainnhe/gruvbox-material",
-  lazy = false,
-  priority = 1000,
-  config = function()
-    vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
-    vim.cmd.colorscheme "gruvbox-material"
-  end,
-},
+-- {
+--   "sainnhe/gruvbox-material",
+--   lazy = false,
+--   priority = 1000,
+--   config = function()
+--     vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
+--     vim.cmd.colorscheme "gruvbox-material"
+--   end,
+-- },
+
+
 
 -- Add this to your lazy.setup block
 -- {
@@ -350,3 +352,4 @@ require("lazy").setup({
   { "windwp/nvim-autopairs", event = "InsertEnter", config = function() require("nvim-autopairs").setup({}) end },
   { "numToStr/Comment.nvim", config = function() require("Comment").setup() end },
 })
+-- require("borland_blue").setup()
