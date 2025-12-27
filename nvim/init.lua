@@ -83,15 +83,15 @@ require("lazy").setup({
   --
   -- THEME & UI
   --  
-  {
-    "EdenEast/nightfox.nvim",
-    lazy = false,
-    priority = 1000, -- Make sure theme loads first
-    config = function()
-      require("nightfox").setup()
-      vim.cmd.colorscheme "dayfox"
-    end,
-  },
+  -- {
+  --   "EdenEast/nightfox.nvim",
+  --   lazy = false,
+  --   priority = 1000, -- Make sure theme loads first
+  --   config = function()
+  --     require("nightfox").setup()
+  --     vim.cmd.colorscheme "nightfox"
+  --   end,
+  -- },
 
 -- Add this to your lazy.setup block
 -- {
@@ -104,7 +104,14 @@ require("lazy").setup({
 --   end,
 -- },
 
-
+{
+    "RostislavArts/naysayer.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd.colorscheme "naysayer"
+    end,
+  },
 
 -- Add this to your lazy.setup block
 -- {
