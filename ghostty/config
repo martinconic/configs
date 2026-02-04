@@ -1,6 +1,10 @@
 #theme = Cobalt2
-#theme = Raycast_Light
-theme = Adventure
+theme = Raycast Light
+#theme = Adventure
+
+#theme = Dawnfox
+
 font-family = JetBrains Mono
 font-size = 14
+
 font-feature = "-liga, -calt, -dlig"

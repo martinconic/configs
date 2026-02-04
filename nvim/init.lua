@@ -83,15 +83,16 @@ require("lazy").setup({
   --
   -- THEME & UI
   --  
-  -- {
-  --   "EdenEast/nightfox.nvim",
-  --   lazy = false,
-  --   priority = 1000, -- Make sure theme loads first
-  --   config = function()
-  --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "nightfox"
-  --   end,
-  -- },
+  {
+    "EdenEast/nightfox.nvim",
+    lazy = false,
+    priority = 1000, -- Make sure theme loads first
+    config = function()
+      require("nightfox").setup()
+      vim.cmd.colorscheme "dayfox"
+    end,
+  },
+
 
 -- Add this to your lazy.setup block
 -- {
@@ -104,15 +105,15 @@ require("lazy").setup({
 --   end,
 -- },
 
-{
-    "RostislavArts/naysayer.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      vim.cmd.colorscheme "naysayer"
-    end,
-  },
-
+-- {
+--     "RostislavArts/naysayer.nvim",
+--     lazy = false,
+--     priority = 1000,
+--     config = function()
+--       vim.cmd.colorscheme "naysayer"
+--     end,
+--   },
+--
 -- Add this to your lazy.setup block
 -- {
 --   "projekt0n/github-nvim-theme",
@@ -125,7 +126,7 @@ require("lazy").setup({
 --     })
 --
 --     -- ‼️ Change the theme name here to select a style
---     vim.cmd("colorscheme github_dark_default")
+--     vim.cmd("colorscheme github_light_default")
 --   end,
 -- },
 
@@ -137,7 +138,7 @@ require("lazy").setup({
   --   config = function()
   --     require("vscode").setup({
   --       -- You can configure style here, e.g., 'dark' or 'light'
-  --       style = 'dark',
+  --       style = 'light',
   --     })
   --     require("vscode").load()
   --   end,
