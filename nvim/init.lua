@@ -5,7 +5,7 @@
 -- 1. BOOTSTRAP LAZY.NVIM (Package Manager)
 -- -----------------------------------------------------------------------------
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -69,6 +69,7 @@ vim.opt.scrolloff = 8             -- Context lines around cursor
 vim.opt.updatetime = 50           -- Faster completion
 vim.opt.undofile = true           -- Persist undo history
 vim.opt.undodir = vim.fn.stdpath("data") .. "/undodir"
+vim.opt.mousescroll = "ver:1,hor:1"
 
 -- Custom Keymaps
 local keymap = vim.keymap.set
@@ -76,23 +77,32 @@ keymap("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "Close Buffer" })
 keymap({"n", "v"}, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
 keymap("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
 keymap("n", "<leader>gg", "<cmd>Neogit<CR>", { desc = "Open Neogit" })
+
 -- -----------------------------------------------------------------------------
 -- 3. PLUGINS (via lazy.nvim)
 -- -----------------------------------------------------------------------------
 require("lazy").setup({
   --
-  -- THEME & UI
-  --  
-  {
-    "EdenEast/nightfox.nvim",
-    lazy = false,
-    priority = 1000, -- Make sure theme loads first
-    config = function()
-      require("nightfox").setup()
-      vim.cmd.colorscheme "dayfox"
-    end,
-  },
+--THEME & UI
+   
+  -- {
+  --   "EdenEast/nightfox.nvim",
+  --   lazy = false,
+  --   priority = 1000, -- Make sure theme loads first
+  --   config = function()
+  --     require("nightfox").setup()
+  --     vim.cmd.colorscheme "dayfox"
+  --   end,
+  -- },
 
+-- {
+--   "pebeto/dookie.nvim",
+--   lazy = false,
+--   priority = 1000,
+--   config = function()
+--     vim.cmd.colorscheme("dookie")
+--   end,
+-- },
 
 -- Add this to your lazy.setup block
 -- {
@@ -105,14 +115,14 @@ require("lazy").setup({
 --   end,
 -- },
 
--- {
---     "RostislavArts/naysayer.nvim",
---     lazy = false,
---     priority = 1000,
---     config = function()
---       vim.cmd.colorscheme "naysayer"
---     end,
---   },
+{
+    "RostislavArts/naysayer.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd.colorscheme "naysayer"
+    end,
+  },
 --
 -- Add this to your lazy.setup block
 -- {
@@ -186,6 +196,7 @@ require("lazy").setup({
   --
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "master",
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
@@ -196,27 +207,19 @@ require("lazy").setup({
     end,
   },
   {
-    -- ‼️ THIS IS THE CORRECTED LSP SETUP ‼️
     "neovim/nvim-lspconfig",
     dependencies = {
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
-      -- Setup mason and mason-lspconfig
       require("mason").setup()
+      -- mason-lspconfig v2 auto-enables installed servers via vim.lsp.enable().
+      -- For per-server config, use vim.lsp.config("server_name", { ... }).
       require("mason-lspconfig").setup({
         ensure_installed = { "rust_analyzer", "gopls", "lua_ls", "zls", "clangd", "ols" },
-        handlers = {
-          -- The default handler installs the server and calls setup without any special args.
-          -- We will attach keymaps globally using the autocommand below.
-          function(server_name)
-            require("lspconfig")[server_name].setup({})
-          end,
-        },
       })
 
-      -- This global autocommand is the reliable way to attach LSP keymaps for your setup.
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", {}),
         callback = function(ev)
@@ -299,7 +302,7 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live Grep" })
       vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Find Buffers" })
       vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Find Symbols in File" })
-      vim.keymap.set("n", "<leader>fS", builtin.lsp_workspace_symbols, { desc = "Find Symbols in Project" })
+      vim.keymap.set("n", "<leader>fS", builtin.lsp_dynamic_workspace_symbols, { desc = "Find Symbols in Project" })
       vim.keymap.set("n", "<leader>d", builtin.diagnostics, { desc = "Show Diagnostics" })
       vim.keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "Search Git Commits" })
       vim.keymap.set("n", "<leader>gB", builtin.git_branches, { desc = "Search Git Branches" })
