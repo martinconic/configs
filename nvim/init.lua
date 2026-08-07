@@ -91,7 +91,7 @@ require("lazy").setup({
   --   priority = 1000, -- Make sure theme loads first
   --   config = function()
   --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "dayfox"
+  --     vim.cmd.colorscheme "nightfox"
   --   end,
   -- },
 
@@ -112,6 +112,33 @@ require("lazy").setup({
 --   config = function()
 --     vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
 --     vim.cmd.colorscheme "gruvbox-material"
+--   end,
+-- },
+
+-- Original gruvbox (classic). Uncomment this AND comment the gruvbox-material
+-- block above to switch. Don't keep both active at once.
+-- {
+--   "morhetz/gruvbox",
+--   lazy = false,
+--   priority = 1000,
+--   config = function()
+--     vim.g.gruvbox_contrast_dark = 'hard' -- or 'soft', 'medium'
+--     vim.cmd.colorscheme "gruvbox"
+--   end,
+-- },
+
+-- macOS Classic (martinconic/macos-classic.nvim) — ACTIVE. Faithful port of
+-- the Zed theme by huacnlee: gold keywords, green strings, grey UI on near-black
+-- (dark) + classic Xcode light. Comment this block AND uncomment another above
+-- to switch. setup() opts: variant ("dark", "dark_soft", "dark_graphite",
+-- "dark_slate", "light"), transparent, italic_comments.
+-- {
+--   "martinconic/macos-classic.nvim",
+--   lazy = false,
+--   priority = 1000,
+--   config = function()
+--     require("macos-classic").setup({})
+--     vim.cmd.colorscheme("macos-classic")
 --   end,
 -- },
 
@@ -303,7 +330,15 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Find Buffers" })
       vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Find Symbols in File" })
       vim.keymap.set("n", "<leader>fS", builtin.lsp_dynamic_workspace_symbols, { desc = "Find Symbols in Project" })
+      
+      vim.keymap("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", { desc = "Prev Buffer" })
+      vim.keymap("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next Buffer" })
+
       vim.keymap.set("n", "<leader>d", builtin.diagnostics, { desc = "Show Diagnostics" })
+      vim.keymap("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
+      vim.keymap("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
+      vim.keymap.set("n", "gl", vim.diagnostic.open_float, { desc = "Show Line Diagnostics" })
+      
       vim.keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "Search Git Commits" })
       vim.keymap.set("n", "<leader>gB", builtin.git_branches, { desc = "Search Git Branches" })
     end,
@@ -363,4 +398,5 @@ require("lazy").setup({
   { "windwp/nvim-autopairs", event = "InsertEnter", config = function() require("nvim-autopairs").setup({}) end },
   { "numToStr/Comment.nvim", config = function() require("Comment").setup() end },
 })
+
 -- require("borland_blue").setup()
