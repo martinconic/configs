@@ -330,15 +330,12 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Find Buffers" })
       vim.keymap.set("n", "<leader>fs", builtin.lsp_document_symbols, { desc = "Find Symbols in File" })
       vim.keymap.set("n", "<leader>fS", builtin.lsp_dynamic_workspace_symbols, { desc = "Find Symbols in Project" })
-      
-      vim.keymap("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", { desc = "Prev Buffer" })
-      vim.keymap("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next Buffer" })
-
+      vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", { desc = "Prev Buffer" })
+      vim.keymap.set("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next Buffer" })
       vim.keymap.set("n", "<leader>d", builtin.diagnostics, { desc = "Show Diagnostics" })
-      vim.keymap("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
-      vim.keymap("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
+      vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
+      vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
       vim.keymap.set("n", "gl", vim.diagnostic.open_float, { desc = "Show Line Diagnostics" })
-      
       vim.keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "Search Git Commits" })
       vim.keymap.set("n", "<leader>gB", builtin.git_branches, { desc = "Search Git Branches" })
     end,
