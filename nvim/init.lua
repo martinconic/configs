@@ -400,3 +400,36 @@ require("lazy").setup({
 })
 
 -- require("borland_blue").setup()
+
+-- -----------------------------------------------------------------------------
+-- ANTIGRAVITY / VS CODE INTEGRATION
+-- -----------------------------------------------------------------------------
+if vim.g.vscode then
+  local vscode = require("vscode")
+  local keymap = vim.keymap.set
+
+  vim.g.mapleader = " "
+
+  -- File Explorer & Buffer controls
+  keymap("n", "<leader>e", function() vscode.action("workbench.action.toggleSidebarVisibility") end, { desc = "Toggle Explorer" })
+  keymap("n", "<leader>q", function() vscode.action("workbench.action.closeActiveEditor") end, { desc = "Close Buffer" })
+
+  -- Telescope equivalents
+  keymap("n", "<leader>ff", function() vscode.action("workbench.action.quickOpen") end, { desc = "Find Files" })
+  keymap("n", "<leader>fg", function() vscode.action("workbench.action.findInFiles") end, { desc = "Live Grep" })
+  keymap("n", "<leader>fb", function() vscode.action("workbench.action.showAllEditors") end, { desc = "Find Buffers" })
+  keymap("n", "<leader>fs", function() vscode.action("workbench.action.gotoSymbol") end, { desc = "Document Symbols" })
+  keymap("n", "<leader>fS", function() vscode.action("workbench.action.showAllSymbols") end, { desc = "Workspace Symbols" })
+  keymap("n", "<leader>d",  function() vscode.action("workbench.action.showErrorsWarnings") end, { desc = "Show Diagnostics" })
+
+  -- LSP Keymaps
+  keymap("n", "gd", function() vscode.action("editor.action.revealDefinition") end)
+  keymap("n", "gr", function() vscode.action("editor.action.goToReferences") end)
+  keymap("n", "gi", function() vscode.action("editor.action.goToImplementation") end)
+  keymap("n", "K",  function() vscode.action("editor.action.showHover") end)
+  keymap("n", "<leader>rn", function() vscode.action("editor.action.rename") end)
+  keymap({"n", "v"}, "<leader>ca", function() vscode.action("editor.action.quickFix") end)
+
+  -- Git Keymaps
+  keymap("n", "<leader>gg", function() vscode.action("workbench.view.scm") end)
+end
