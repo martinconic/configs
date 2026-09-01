@@ -42,8 +42,8 @@ vim.opt.guicursor = {
   'a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor',  -- Blinking settings
 }
 
--- Define highlight groups (set insert cursor to black for light theme contrast)
-vim.api.nvim_set_hl(0, 'Cursor', { fg = '#ffffff', bg = '#ffffff' })  -- White for normal mode (adjust as needed)
+-- Custom cursor highlight adjustments (avoid hardcoding solid white background for light themes)
+-- vim.api.nvim_set_hl(0, 'Cursor', { fg = '#ffffff', bg = '#ffffff' })
 vim.api.nvim_set_hl(0, 'iCursor', { bg = '#000000' })  -- Black vertical bar in insert mode
 
 -- Optional: Reset cursor on exit to avoid affecting the terminal
@@ -77,6 +77,14 @@ keymap("n", "<leader>q", "<cmd>bdelete<CR>", { desc = "Close Buffer" })
 keymap({"n", "v"}, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
 keymap("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
 keymap("n", "<leader>gg", "<cmd>Neogit<CR>", { desc = "Open Neogit" })
+keymap("n", "<leader>tb", function()
+  if vim.o.background == "dark" then
+    vim.o.background = "light"
+  else
+    vim.o.background = "dark"
+  end
+  print("Background: " .. vim.o.background)
+end, { desc = "Toggle Light/Dark Background" })
 
 -- -----------------------------------------------------------------------------
 -- 3. PLUGINS (via lazy.nvim)
@@ -85,98 +93,156 @@ require("lazy").setup({
   --
 --THEME & UI
    
+  -- =================================----------------==========================
+  -- THEMES (Uncomment ANY SINGLE BLOCK below to activate and test it)
+  -- Note: For light mode, make sure `vim.o.background = "light"` is set in config!
+  -- =================================--------------------------------==========
+
+  -- ---------------------------------------------------------------------------
+  -- GRUVBOX VARIANTS
+  -- ---------------------------------------------------------------------------
+
+  -- 1. Modern Gruvbox Lua (ellisonleao/gruvbox.nvim) — RECOMMENDED
   -- {
-  --   "EdenEast/nightfox.nvim",
+  --   "ellisonleao/gruvbox.nvim",
   --   lazy = false,
-  --   priority = 1000, -- Make sure theme loads first
+  --   priority = 1000,
   --   config = function()
-  --     require("nightfox").setup()
-  --     vim.cmd.colorscheme "nightfox"
+  --     require("gruvbox").setup({ contrast = "medium" })
+  --     vim.o.background = "light" -- Change to "dark" for dark mode
+  --     vim.cmd.colorscheme("gruvbox")
   --   end,
   -- },
 
--- {
---   "pebeto/dookie.nvim",
---   lazy = false,
---   priority = 1000,
---   config = function()
---     vim.cmd.colorscheme("dookie")
---   end,
--- },
+  -- 2. Gruvbox Material (sainnhe/gruvbox-material)
+  -- {
+  --   "sainnhe/gruvbox-material",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.g.gruvbox_material_background = 'hard' -- 'hard', 'medium', 'soft'
+  --     vim.o.background = "light" -- Change to "dark" for dark mode
+  --     vim.cmd.colorscheme("gruvbox-material")
+  --   end,
+  -- },
 
--- Add this to your lazy.setup block
--- {
---   "sainnhe/gruvbox-material",
---   lazy = false,
---   priority = 1000,
---   config = function()
---     vim.g.gruvbox_material_background = 'hard' -- or 'soft', 'medium'
---     vim.cmd.colorscheme "gruvbox-material"
---   end,
--- },
+  -- 3. Classic Gruvbox (morhetz/gruvbox)
+  -- {
+  --   "morhetz/gruvbox",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.g.gruvbox_contrast_light = 'medium' -- 'hard', 'medium', 'soft'
+  --     vim.o.background = "light" -- Change to "dark" for dark mode
+  --     vim.cmd.colorscheme("gruvbox")
+  --   end,
+  -- },
 
--- Original gruvbox (classic). Uncomment this AND comment the gruvbox-material
--- block above to switch. Don't keep both active at once.
--- {
---   "morhetz/gruvbox",
---   lazy = false,
---   priority = 1000,
---   config = function()
---     vim.g.gruvbox_contrast_dark = 'hard' -- or 'soft', 'medium'
---     vim.cmd.colorscheme "gruvbox"
---   end,
--- },
+  -- ---------------------------------------------------------------------------
+  -- SOLARIZED VARIANTS
+  -- ---------------------------------------------------------------------------
 
--- macOS Classic (martinconic/macos-classic.nvim) — ACTIVE. Faithful port of
--- the Zed theme by huacnlee: gold keywords, green strings, grey UI on near-black
--- (dark) + classic Xcode light. Comment this block AND uncomment another above
--- to switch. setup() opts: variant ("dark", "dark_soft", "dark_graphite",
--- "dark_slate", "light"), transparent, italic_comments.
--- {
---   "martinconic/macos-classic.nvim",
---   lazy = false,
---   priority = 1000,
---   config = function()
---     require("macos-classic").setup({})
---     vim.cmd.colorscheme("macos-classic")
---   end,
--- },
-
-{
-    "RostislavArts/naysayer.nvim",
+  -- 4. Modern Solarized Lua (maxmx03/solarized.nvim) — ACTIVE
+  {
+    "maxmx03/solarized.nvim",
     lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme "naysayer"
+      vim.o.background = "light" -- Set "light" or "dark"
+
+      require("solarized").setup({
+        on_colors = function(colors)
+          -- Replace pinkish/magenta colors with calm Solarized blue & cyan
+          colors.magenta = colors.blue -- Replaces pink/magenta (#d33682) with Blue (#268bd2)
+          colors.violet = colors.cyan  -- Replaces violet (#6c71c4) with Cyan (#2aa198)
+          return {
+            magenta = colors.blue,
+            violet = colors.cyan,
+          }
+        end,
+      })
+
+      vim.cmd.colorscheme("solarized")
     end,
   },
---
--- Add this to your lazy.setup block
--- {
---   "projekt0n/github-nvim-theme",
---   lazy = false,
---   priority = 1000,
---   config = function()
---     -- The setup function can be minimal or empty now
---     require("github-theme").setup({
---       -- All options are optional
---     })
---
---     -- ‼️ Change the theme name here to select a style
---     vim.cmd("colorscheme github_light_default")
---   end,
--- },
 
--- Add this to your lazy.setup block
+  -- 5. Solarized Osaka (craftzdog/solarized-osaka.nvim)
+  -- {
+  --   "craftzdog/solarized-osaka.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.o.background = "light" -- Change to "dark" for dark mode
+  --     require("solarized-osaka").setup({})
+  --     vim.cmd.colorscheme("solarized-osaka")
+  --   end,
+  -- },
+
+  -- 6. Solarized 8 (lifepillar/vim-solarized8)
+  -- {
+  --   "lifepillar/vim-solarized8",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.o.background = "light" -- Change to "dark" for dark mode
+  --     vim.cmd.colorscheme("solarized8")
+  --   end,
+  -- },
+
+  -- 7. Solarized Lua (shaunsingh/solarized.nvim)
+  -- {
+  --   "shaunsingh/solarized.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.o.background = "light" -- Change to "dark" for dark mode
+  --     vim.cmd.colorscheme("solarized")
+  --   end,
+  -- },
+
+  -- ---------------------------------------------------------------------------
+  -- OTHER THEMES
+  -- ---------------------------------------------------------------------------
+
+  -- 8. macOS Classic (martinconic/macos-classic.nvim)
+  -- {
+  --   "martinconic/macos-classic.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.cmd.colorscheme("macos-classic-light")
+  --   end,
+  -- },
+
+  -- 9. Nightfox / Dayfox (EdenEast/nightfox.nvim)
+  -- {
+  --   "EdenEast/nightfox.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     require("nightfox").setup()
+  --     vim.cmd.colorscheme("dayfox") -- Light: "dayfox", "dawnfox" | Dark: "nightfox", "nordfox"
+  --   end,
+  -- },
+
+  -- 10. GitHub Light / Dark (projekt0n/github-nvim-theme)
+  -- {
+  --   "projekt0n/github-nvim-theme",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     require("github-theme").setup({})
+  --     vim.cmd("colorscheme github_light_default")
+  --   end,
+  -- },
+
+  -- 11. VS Code Theme (Mofiqul/vscode.nvim)
   -- {
   --   "Mofiqul/vscode.nvim",
   --   lazy = false,
   --   priority = 1000,
   --   config = function()
-  --     require("vscode").setup({
-  --       -- You can configure style here, e.g., 'dark' or 'light'
-  --       style = 'light',
-  --     })
+  --     require("vscode").setup({ style = 'light' })
   --     require("vscode").load()
   --   end,
   -- },
