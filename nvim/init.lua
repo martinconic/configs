@@ -143,28 +143,28 @@ require("lazy").setup({
   -- ---------------------------------------------------------------------------
 
   -- 4. Modern Solarized Lua (maxmx03/solarized.nvim) — ACTIVE
-  {
-    "maxmx03/solarized.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      vim.o.background = "light" -- Set "light" or "dark"
-
-      require("solarized").setup({
-        on_colors = function(colors)
-          -- Replace pinkish/magenta colors with calm Solarized blue & cyan
-          colors.magenta = colors.blue -- Replaces pink/magenta (#d33682) with Blue (#268bd2)
-          colors.violet = colors.cyan  -- Replaces violet (#6c71c4) with Cyan (#2aa198)
-          return {
-            magenta = colors.blue,
-            violet = colors.cyan,
-          }
-        end,
-      })
-
-      vim.cmd.colorscheme("solarized")
-    end,
-  },
+  -- {
+  --   "maxmx03/solarized.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.o.background = "light" -- Set "light" or "dark"
+  --
+  --     require("solarized").setup({
+  --       on_colors = function(colors)
+  --         -- Replace pinkish/magenta colors with calm Solarized blue & cyan
+  --         colors.magenta = colors.blue -- Replaces pink/magenta (#d33682) with Blue (#268bd2)
+  --         colors.violet = colors.cyan  -- Replaces violet (#6c71c4) with Cyan (#2aa198)
+  --         return {
+  --           magenta = colors.blue,
+  --           violet = colors.cyan,
+  --         }
+  --       end,
+  --     })
+  --
+  --     vim.cmd.colorscheme("solarized")
+  --   end,
+  -- },
 
   -- 5. Solarized Osaka (craftzdog/solarized-osaka.nvim)
   -- {
@@ -204,7 +204,33 @@ require("lazy").setup({
   -- OTHER THEMES
   -- ---------------------------------------------------------------------------
 
-  -- 8. macOS Classic (martinconic/macos-classic.nvim)
+  -- 8. Naysayer (Jonathan Blow's dark theme - RostislavArts/naysayer.nvim)
+  -- {
+  --   "RostislavArts/naysayer.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.cmd.colorscheme("naysayer")
+  --   end,
+  -- },
+
+  -- 9. Gruber Darker (Our faithful port of Tsoding's Emacs theme)
+  {
+    "martinconic/gruber-darker.nvim",
+    dir = "/home/calin/repos/martinconic/gruber-darker.nvim", -- local development
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require("gruber-darker").setup({
+        transparent = false,
+        italic_comments = true,
+        bold_keywords = true,
+      })
+      vim.cmd.colorscheme("gruber-darker")
+    end,
+  },
+
+  -- 10. macOS Classic (martinconic/macos-classic.nvim)
   -- {
   --   "martinconic/macos-classic.nvim",
   --   lazy = false,
@@ -214,7 +240,7 @@ require("lazy").setup({
   --   end,
   -- },
 
-  -- 9. Nightfox / Dayfox (EdenEast/nightfox.nvim)
+  -- 10. Nightfox / Dayfox (EdenEast/nightfox.nvim)
   -- {
   --   "EdenEast/nightfox.nvim",
   --   lazy = false,
@@ -225,7 +251,7 @@ require("lazy").setup({
   --   end,
   -- },
 
-  -- 10. GitHub Light / Dark (projekt0n/github-nvim-theme)
+  -- 11. GitHub Light / Dark (projekt0n/github-nvim-theme)
   -- {
   --   "projekt0n/github-nvim-theme",
   --   lazy = false,
@@ -236,7 +262,7 @@ require("lazy").setup({
   --   end,
   -- },
 
-  -- 11. VS Code Theme (Mofiqul/vscode.nvim)
+  -- 12. VS Code Theme (Mofiqul/vscode.nvim)
   -- {
   --   "Mofiqul/vscode.nvim",
   --   lazy = false,
