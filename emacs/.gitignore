@@ -1,0 +1,27 @@
+# ==============================================================================
+# Emacs Dotfiles .gitignore
+# ==============================================================================
+
+# ELPA packages (auto-installed on first launch via use-package :ensure t)
+/elpa/
+
+# Native compilation & Tree-sitter binaries (machine-specific)
+/eln-cache/
+/tree-sitter/
+*.elc
+*.eln
+
+# Editor session state, history & caches
+/auto-save-list/
+/transient/
+/.cache/
+recentf
+places
+projects
+history
+treemacs-persist
+
+# Backups and lockfiles
+*~
+.#*
+*.bak

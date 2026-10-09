@@ -22,6 +22,12 @@
       native-comp-async-report-warnings-errors 'silent
       warning-minimum-level :error)
 
+;; Maximize GC threshold during startup for fast loading, restore after init:
+(setq gc-cons-threshold most-positive-fixnum)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 100 1024 1024))))
+
 ;; =============================================================================
 ;; 1. PACKAGE SYSTEM SETUP (ELPA & MELPA)
 ;; =============================================================================
@@ -65,7 +71,7 @@
 (use-package gruber-darker-theme)
 
 ;; Active theme on startup
-(load-theme 'naysayer t)
+(load-theme 'solarized-light t)
 
 ;; Cursor style: solid, non-blinking retro block cursor for precision editing
 (setq-default cursor-type 'box)
@@ -73,7 +79,7 @@
 
 ;; Base Font Size:
 ;; 140 = 14pt (adjust up to 150 for larger text or down to 130 for more density)
-(set-face-attribute 'default nil :height 140)
+(set-face-attribute 'default nil :height 150)
 
 ;; =============================================================================
 ;; 3. CORE EDITOR DEFAULTS & HYGIENE
@@ -85,7 +91,10 @@
  tab-width 4
  c-basic-offset 4            ; Indent C/C++ by 4 spaces (classic c-mode)
  c-ts-mode-indent-offset 4   ; Indent C/C++ by 4 spaces (modern c-ts-mode)
+ c-ts-mode-indent-style 'k&r ; Standard K&R C indentation (clean 4 spaces, no GNU offset)
  truncate-lines t)           ; Do not wrap long lines onto the next visual line
+
+(setq c-default-style "k&r") ; Fallback for classic c-mode
 
 (setq
  ;; Startup speed: skip the introductory GNU splash screen and empty the scratch buffer
@@ -147,13 +156,15 @@
 ;;    Emacs from probing for 7 dead VCS types (Bazaar, CVS, RCS, SCCS, SVN, etc.).
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
-      vc-handled-backends '(Git))
+      vc-handled-backends '(Git)
+      project-vc-extra-root-markers '(".project" "Makefile"))
 
 ;; -----------------------------------------------------------------------------
 ;; Navigation & UI Essentials:
 ;; -----------------------------------------------------------------------------
 (global-auto-revert-mode 1)       ; Reload file if changed externally (e.g., git pull)
-(setq dired-dwim-target t)         ; In 2-pane Dired, automatically suggest the other pane for copy/rename
+(setq dired-dwim-target t          ; In 2-pane Dired, automatically suggest the other pane for copy/rename
+      dired-listing-switches "-alh --group-directories-first") ; Group directories at top of list
 (global-display-line-numbers-mode 1)
 (setq display-line-numbers-type t) ; Show line numbers on the left margin
 (show-paren-mode 1)                ; Highlight matching () {} [] pairs
@@ -178,6 +189,13 @@
   (compilation-auto-jump-to-first-error nil)
   :hook (compilation-filter . ansi-color-compilation-filter))
 
+;; Instant rebuild shortcuts (Casey Muratori & Matklad):
+;; - F5 or C-c C-c : re-run previous compile command without prompting
+;; - C-c c         : invoke new compile command
+(global-set-key (kbd "<f5>") #'recompile)
+(global-set-key (kbd "C-c c") #'compile)
+(global-set-key (kbd "C-c C-c") #'recompile)
+
 ;; =============================================================================
 ;; 5. TEXT MANIPULATION & EDITING SHORTCUTS (Tsoding & Matklad)
 ;; =============================================================================
@@ -193,7 +211,7 @@
 (defun rc/duplicate-line ()
   "Duplicate current line and keep cursor column."
   (interactive)
-  (let ((column (- (point) (point-at-bol)))
+  (let ((column (- (point) (pos-bol)))
         (line (let ((s (thing-at-point 'line t)))
                 (if s (string-remove-suffix "\n" s) ""))))
     (move-end-of-line 1)
@@ -229,6 +247,22 @@
 ;; Progressively selects word -> string -> argument -> expression -> function block.
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
+
+;; Universal Format Buffer (C-p):
+;; In C/C++, use standard Emacs 4-space K&R indentation. In Go/Zig, use LSP (gopls/zls).
+(defun rc/format-buffer ()
+  "Format entire buffer: in C/C++ use standard Emacs indentation, otherwise use LSP if active."
+  (interactive)
+  (if (and (bound-and-true-p eglot--managed-mode)
+           (fboundp 'eglot-format-buffer)
+           (not (derived-mode-p 'c-mode 'c-ts-mode 'c++-mode 'c++-ts-mode))
+           (eglot-server-capable :documentFormattingProvider))
+      (eglot-format-buffer)
+    (save-excursion
+      (indent-region (point-min) (point-max))
+      (message "Buffer formatted (standard 4-space K&R)"))))
+
+(keymap-set prog-mode-map "C-p" #'rc/format-buffer)
 
 ;; =============================================================================
 ;; 6. PROJECT FILE EXPLORER (TREEMACS)
@@ -277,16 +311,17 @@
   (global-corfu-mode 1))
 
 ;; Consult: fast interactive search commands:
-;; - C-s     : search lines in current file with live preview
-;; - C-x b   : search buffers and recent files
-;; - M-g i   : search functions/types in current file
-;; - C-c f g : project-wide ripgrep
+;; - C-s             : search lines in current file with live preview
+;; - C-x b           : search buffers and recent files
+;; - M-g i           : search functions/types in current file
+;; - M-s r / C-c f g : project-wide ripgrep
 (use-package consult
   :bind
   (("C-s"     . consult-line)
    ("C-x b"   . consult-buffer)
    ("M-g i"   . consult-imenu)
    ("M-g I"   . consult-imenu-multi)
+   ("M-s r"   . consult-ripgrep)
    ("C-c f g" . consult-ripgrep)))
 
 ;; Better Jumper (Matklad):
@@ -336,7 +371,7 @@
               ("C-c r" . eglot-rename)             ; Rename symbol project-wide
               ("C-c a" . eglot-code-actions)       ; Quickfixes and code actions
               ("C-c h" . eldoc)                    ; View hover documentation
-              ("C-p"   . eglot-format-buffer))     ; Format current buffer (Matklad)
+              ("C-p"   . rc/format-buffer))        ; Format current buffer (Matklad)
   :custom
   ;; Non-blocking LSP: connect asynchronously so opening large files is instant
   (eglot-sync-connect 0)
@@ -436,21 +471,11 @@
   :bind ("C-x g" . magit-status))
 
 ;; =============================================================================
-;; 11. CUSTOM AUTOMATIC VARIABLES
+;; 11. CUSTOM AUTOMATIC VARIABLES ISOLATION
 ;; =============================================================================
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(naysayer))
- '(custom-safe-themes
-   '("01a9797244146bbae39b18ef37e6f2ca5bebded90d9fe3a2f342a9e863aaa4fd" "2b0fcc7cc9be4c09ec5c75405260a85e41691abb1ee28d29fcd5521e4fca575b" "67256d7183dc290d2e7b5ab13137774f8d4547a0040986a3a13edb6a208538fa" "09276f492e8e604d9a0821ef82f27ce58b831f90f49f986b4d93a006c12dbcdb" default))
- '(package-selected-packages
-   '(treemacs naysayer-theme zig-mode which-key vertico orderless marginalia magit go-mode general evil-collection corfu consult)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; Keep init.el clean by redirecting Emacs auto-generated Custom settings to custom.el
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(when (file-exists-p custom-file)
+  (load custom-file t))
+
+;;; init.el ends here

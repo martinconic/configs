@@ -1,86 +1,224 @@
-;;; init.el --- Complete, Old-School Setup for C, Go, and Zig
+;; -*- lexical-binding: t; -*-
+;;; init.el --- Comprehensive, Educational Config for Windows (C, Go, Zig - GNU Emacs 31)
+
+;; =============================================================================
+;; WELCOME TO YOUR WINDOWS EMACS CONFIGURATION!
+;; =============================================================================
+;; Optimized for Windows 10/11 with NTFS filesystem safety, ClearType typography,
+;; and sub-second compilation feedback loops inspired by Casey Muratori,
+;; Jonathan Blow, Alexey Kutepov (Tsoding), and Aleksey Kladov (Matklad).
 
 ;; -----------------------------------------------------------------------------
-;; 1. PACKAGE SYSTEM SETUP
+;; WARNING & COMPILATION POPUP SUPPRESSION
 ;; -----------------------------------------------------------------------------
+(setq warning-suppress-types '((files missing-lexbind-cookie)
+                               (native-compiler))
+      warning-suppress-log-types '((files missing-lexbind-cookie)
+                                   (native-compiler))
+      native-comp-async-report-warnings-errors 'silent
+      warning-minimum-level :error)
+
+;; Maximize GC threshold during startup for fast loading, restore after init:
+(setq gc-cons-threshold most-positive-fixnum)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 100 1024 1024))))
+
+;; =============================================================================
+;; 1. PACKAGE SYSTEM SETUP (ELPA & MELPA)
+;; =============================================================================
 (require 'package)
 (setq package-archives
       '(("gnu"          . "https://elpa.gnu.org/packages/")
         ("nongnu"       . "https://elpa.nongnu.org/nongnu/")
         ("melpa"        . "https://melpa.org/packages/")))
 (package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
+
+(unless (and (package-installed-p 'gruvbox-theme)
+             (package-installed-p 'solarized-theme)
+             (package-installed-p 'doom-themes))
+  (ignore-errors (package-refresh-contents)))
 
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-;;-----------------------------------------------------
-;; Add LLVM/clangd directly to Emacs internal execution path
-;;-----------------------------------------------------
-(add-to-list 'exec-path "C:/Program Files/LLVM/bin")
-(setenv "PATH" (concat "C:\\Program Files\\LLVM\\bin;" (getenv "PATH")))
+;; =============================================================================
+;; 2. WINDOWS PATHS & TOOLING INTEGRATION
+;; =============================================================================
+;; Automatically detect standard Windows installation directories for LLVM/Clang,
+;; Go, and Zig if they exist:
+(dolist (path '("C:/Program Files/LLVM/bin"
+                "C:/Program Files/Go/bin"
+                "C:/Go/bin"
+                "C:/zig"
+                "C:/tools/bin"))
+  (when (file-directory-p path)
+    (add-to-list 'exec-path path)
+    (setenv "PATH" (concat path ";" (getenv "PATH")))))
 
-;; -----------------------------------------------------------------------------
-;; 2. THEME (Jonathan Blow's Naysayer)
-;; -----------------------------------------------------------------------------
-(use-package naysayer-theme
-  :config
-  (load-theme 'naysayer t))
+;; =============================================================================
+;; 3. THEMES & WINDOWS VISUAL STYLING
+;; =============================================================================
+(use-package gruvbox-theme)
+(use-package solarized-theme)
+(use-package doom-themes)
+(use-package naysayer-theme)
+(use-package gruber-darker-theme)
 
-;; Optional: Retro block cursor without blinking
+;; Active theme on startup
+(load-theme 'solarized-light t)
+
+;; Cursor style: solid, non-blinking retro block cursor
 (setq-default cursor-type 'box)
 (blink-cursor-mode 0)
 
-;; -----------------------------------------------------------------------------
-;; 3. CORE EDITOR DEFAULTS
-;; -----------------------------------------------------------------------------
+;; Windows Typography: Consolas with ClearType renders crisp and readable
+(when (member "Consolas" (font-family-list))
+  (set-face-attribute 'default nil :family "Consolas" :height 120))
+
+;; =============================================================================
+;; 4. CORE EDITOR DEFAULTS, HYGIENE & WINDOWS OPTIMIZATIONS
+;; =============================================================================
 (setq-default
- indent-tabs-mode nil         ; Spaces for tabs (Go automatically overrides to real tabs)
+ indent-tabs-mode nil         ; Spaces for tabs (Go overrides to real tabs)
  tab-width 4
- c-basic-offset 4
- truncate-lines t)           ; Do not wrap lines
+ c-basic-offset 4            ; Classic C 4-space
+ c-ts-mode-indent-offset 4   ; Tree-sitter C 4-space
+ c-ts-mode-indent-style 'k&r ; Standard K&R C indentation (clean 4 spaces)
+ truncate-lines t)
 
-;; Set default font and size (height is in 1/10 pt, so 130 = 13pt, 140 = 14pt, 160 = 16pt)
-(set-face-attribute 'default nil :family "Consolas" :height 120)
+(setq c-default-style "k&r")
 
-(setq inhibit-startup-screen t
-      initial-scratch-message nil
-      ring-bell-function 'ignore
-      select-enable-clipboard t    ; Sync with system clipboard
-      scroll-conservatively 101    ; Smooth scroll
-      scroll-margin 8)             ; Context lines around cursor
+(setq
+ inhibit-startup-screen t
+ initial-scratch-message nil
+ ring-bell-function 'ignore
+ select-enable-clipboard t
+ scroll-conservatively 101
+ scroll-margin 8
 
-;; Redirect auto-generated Custom UI settings away from init.el
-(setq custom-file (locate-user-emacs-file "custom.el"))
-(when (file-exists-p custom-file)
-  (load custom-file))
+ ;; Windows NTFS File Hygiene:
+ ;; - Disabling lockfiles prevents NTFS symlink permission crashes on Windows.
+ ;; - Disabling backup files stops 'filename~' duplicates from cluttering dirs.
+ create-lockfiles nil
+ make-backup-files nil
 
-;; UI & Navigation Essentials
+ ;; Smart Tab: TAB indents, or completes if already indented
+ tab-always-indent 'complete)
+
+;; Windows Subprocess Pipe Throughput & Low Latency:
+;; Critical for high-speed LSP (clangd.exe, gopls.exe, zls.exe) on Windows
+(setq read-process-output-max (* 1024 1024)
+      w32-pipe-read-delay 0
+      vc-handled-backends '(Git)
+      project-vc-extra-root-markers '(".project" "Makefile" "build.bat"))
+
+;; Navigation & UI Essentials
+(global-auto-revert-mode 1)
+(setq dired-dwim-target t)
 (global-display-line-numbers-mode 1)
-(show-paren-mode 1)                        ; Highlight matching brackets
-(electric-pair-mode 1)                     ; Auto-close quotes and brackets
-(save-place-mode 1)                        ; Remember cursor position across restarts
-(recentf-mode 1)                           ; Keep track of recent files
-(which-key-mode 1)                         ; Popup hints for key combinations
+(setq display-line-numbers-type t)
+(show-paren-mode 1)
+(electric-pair-mode 1)
+(save-place-mode 1)
+(recentf-mode 1)
+(which-key-mode 1)
+(windmove-default-keybindings)
+(add-hook 'prog-mode-hook #'hs-minor-mode)
 
-;; -----------------------------------------------------------------------------
-;; 4. LEFT-SIDE PROJECT NAVIGATOR (TREEMACS)
-;; -----------------------------------------------------------------------------
+;; =============================================================================
+;; 5. COMPILATION BUFFER ERGONOMICS (Casey Muratori & Matklad)
+;; =============================================================================
+;; Windows build.bat / nmake / MSVC cl.exe optimization:
+(use-package compile
+  :custom
+  (compilation-scroll-output nil)
+  (compilation-ask-about-save nil)
+  (compilation-auto-jump-to-first-error nil)
+  :hook (compilation-filter . ansi-color-compilation-filter))
+
+;; Instant rebuild shortcuts:
+;; - F5 or C-c C-c : re-run previous compile command (build.bat / make) immediately
+;; - C-c c         : invoke new compile command
+(global-set-key (kbd "<f5>") #'recompile)
+(global-set-key (kbd "C-c c") #'compile)
+(global-set-key (kbd "C-c C-c") #'recompile)
+
+;; =============================================================================
+;; 6. TEXT MANIPULATION & EDITING SHORTCUTS (Tsoding & Matklad)
+;; =============================================================================
+(use-package move-text
+  :bind (("M-p" . move-text-up)
+         ("M-n" . move-text-down)))
+
+(defun rc/duplicate-line ()
+  "Duplicate current line and keep cursor column."
+  (interactive)
+  (let ((column (- (point) (pos-bol)))
+        (line (let ((s (thing-at-point 'line t)))
+                (if s (string-remove-suffix "\n" s) ""))))
+    (move-end-of-line 1)
+    (newline)
+    (insert line)
+    (move-beginning-of-line 1)
+    (forward-char column)))
+(global-set-key (kbd "C-,") #'rc/duplicate-line)
+
+(defun kill-region-smart ()
+  "Cut active region, or current line if no selection."
+  (interactive)
+  (if (use-region-p)
+      (call-interactively #'kill-region)
+    (kill-whole-line)))
+
+(defun kill-ring-save-smart ()
+  "Copy active region, or current line if no selection."
+  (interactive)
+  (if (use-region-p)
+      (call-interactively #'kill-ring-save)
+    (save-excursion
+      (beginning-of-line)
+      (copy-region-as-kill (line-beginning-position) (line-beginning-position 2)))))
+
+(global-set-key (kbd "C-w") #'kill-region-smart)
+(global-set-key (kbd "M-w") #'kill-ring-save-smart)
+
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+
+;; Universal Format Buffer (C-p):
+;; In C/C++, use standard Emacs 4-space K&R indentation. In Go/Zig, use LSP (gopls/zls).
+(defun rc/format-buffer ()
+  "Format entire buffer: in C/C++ use standard Emacs indentation, otherwise use LSP if active."
+  (interactive)
+  (if (and (bound-and-true-p eglot--managed-mode)
+           (fboundp 'eglot-format-buffer)
+           (not (derived-mode-p 'c-mode 'c-ts-mode 'c++-mode 'c++-ts-mode))
+           (eglot-server-capable :documentFormattingProvider))
+      (eglot-format-buffer)
+    (save-excursion
+      (indent-region (point-min) (point-max))
+      (message "Buffer formatted (standard 4-space K&R)"))))
+
+(keymap-set prog-mode-map "C-p" #'rc/format-buffer)
+
+;; =============================================================================
+;; 7. PROJECT FILE EXPLORER (TREEMACS)
+;; =============================================================================
 (use-package treemacs
   :bind
-  (("C-c t t" . treemacs)                    ; Toggle sidebar on/off
-   ("C-c t f" . treemacs-find-file)          ; Focus current file in tree
+  (("C-c t t" . treemacs)
+   ("C-c t f" . treemacs-find-file)
    ("C-c t p" . treemacs-add-project-to-workspace))
   :custom
   (treemacs-width 30)
   (treemacs-position 'left)
-  (treemacs-follow-mode t)                   ; Automatically highlight active file
+  (treemacs-follow-mode t)
   (treemacs-filewatch-mode t))
 
-;; -----------------------------------------------------------------------------
-;; 5. SEARCH & INTERACTIVE COMPLETION (VERTICO + CONSULT)
-;; -----------------------------------------------------------------------------
+;; =============================================================================
+;; 8. SEARCH & INTERACTIVE COMPLETION (VERTICO + CONSULT)
+;; =============================================================================
 (use-package vertico
   :init
   (vertico-mode 1))
@@ -93,7 +231,6 @@
   :init
   (marginalia-mode 1))
 
-;; Fast, lightweight in-buffer completion popup for LSP
 (use-package corfu
   :custom
   (corfu-auto t)
@@ -102,41 +239,68 @@
   :init
   (global-corfu-mode 1))
 
-;; Fast search across buffers, files, functions, and project grep
 (use-package consult
   :bind
-  (("C-s"     . consult-line)                ; Fast search inside current file
-   ("C-x b"   . consult-buffer)              ; Switch buffer / recent file
-   ("M-g i"   . consult-imenu)               ; Search functions/methods in file
-   ("M-g I"   . consult-imenu-multi)         ; Search functions across all open files
-   ("C-c f g" . consult-ripgrep)))           ; Ripgrep across whole project
+  (("C-s"             . consult-line)
+   ("C-x b"           . consult-buffer)
+   ("M-g i"           . consult-imenu)
+   ("M-g I"           . consult-imenu-multi)
+   ("M-s r"           . consult-ripgrep)
+   ("C-c f g"         . consult-ripgrep)))
 
-;; -----------------------------------------------------------------------------
-;; 6. CODE INTELLIGENCE & LSP (EGLOT)
-;; -----------------------------------------------------------------------------
-(require 'eglot)
+(use-package better-jumper
+  :bind
+  (("M-[" . better-jumper-jump-backward)
+   ("M-]" . better-jumper-jump-forward))
+  :config
+  (better-jumper-mode 1)
+  (with-eval-after-load 'xref
+    (advice-add #'xref-push-marker-stack :override #'better-jumper-set-jump)))
 
-;; Hook built-in Eglot into standard & Tree-Sitter language modes
-(add-hook 'c-mode-hook #'eglot-ensure)         ; Uses clangd
-(add-hook 'c-ts-mode-hook #'eglot-ensure)      ; Tree-sitter C
-(add-hook 'c++-mode-hook #'eglot-ensure)       ; Uses clangd
-(add-hook 'c++-ts-mode-hook #'eglot-ensure)    ; Tree-sitter C++
-(add-hook 'go-mode-hook #'eglot-ensure)        ; Uses gopls
-(add-hook 'go-ts-mode-hook #'eglot-ensure)     ; Tree-sitter Go
-(add-hook 'zig-mode-hook #'eglot-ensure)       ; Uses zls
+;; =============================================================================
+;; 9. LANGUAGE SERVER PROTOCOL (EGLOT) & CODE INTELLIGENCE
+;; =============================================================================
+(use-package eglot
+  :hook ((c-mode       . eglot-ensure)
+         (c-ts-mode    . eglot-ensure)
+         (c++-mode     . eglot-ensure)
+         (c++-ts-mode  . eglot-ensure)
+         (go-mode      . eglot-ensure)
+         (go-ts-mode   . eglot-ensure)
+         (zig-mode     . eglot-ensure)
+         (zig-ts-mode  . eglot-ensure))
+  :bind (:map eglot-mode-map
+              ("M-."   . xref-find-definitions)
+              ("M-?"   . xref-find-references)
+              ("C-c r" . eglot-rename)
+              ("C-c a" . eglot-code-actions)
+              ("C-c h" . eldoc)
+              ("C-p"   . rc/format-buffer))
+  :custom
+  (eglot-sync-connect 0)
+  (eglot-events-buffer-size 0)
+  :config
+  (add-to-list 'eglot-ignored-server-capabilities :inlayHintProvider))
 
-;; Auto-format Go files before saving
 (add-hook 'before-save-hook
           (lambda ()
-            (when (or (eq major-mode 'go-mode) (eq major-mode 'go-ts-mode))
-              (eglot-format-buffer))))
+            (when (derived-mode-p 'go-mode 'go-ts-mode)
+              (ignore-errors (eglot-format-buffer)))))
 
-;; Major Modes for Go & Zig (C/C++ is built-in)
 (use-package go-mode)
 (use-package zig-mode)
 
-;; -----------------------------------------------------------------------------
-;; 7. GIT INTEGRATION (MAGIT)
-;; -----------------------------------------------------------------------------
+;; =============================================================================
+;; 10. GIT INTEGRATION (MAGIT)
+;; =============================================================================
 (use-package magit
   :bind ("C-x g" . magit-status))
+
+;; =============================================================================
+;; 11. CUSTOM AUTOMATIC VARIABLES ISOLATION
+;; =============================================================================
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(when (file-exists-p custom-file)
+  (load custom-file t))
+
+;;; init.el ends here
