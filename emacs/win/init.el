@@ -126,6 +126,13 @@
 (windmove-default-keybindings)
 (add-hook 'prog-mode-hook #'hs-minor-mode)
 
+;; Systems Code Hygiene:
+;; - 80-column vertical ruler for clean side-by-side editing in split windows
+;; - Automatically strip trailing whitespace before saving
+(setq-default fill-column 80)
+(add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+
 ;; =============================================================================
 ;; 5. COMPILATION BUFFER ERGONOMICS (Casey Muratori & Matklad)
 ;; =============================================================================
@@ -143,6 +150,13 @@
 (global-set-key (kbd "<f5>") #'recompile)
 (global-set-key (kbd "C-c c") #'compile)
 (global-set-key (kbd "C-c C-c") #'recompile)
+
+;; Visual 6-Pane GDB Debugger (M-x gdb):
+(setq gdb-many-windows t
+      gdb-show-main t)
+
+;; Quick POSIX / C Library Manuals (C-c m):
+(global-set-key (kbd "C-c m") (if (executable-find "man") #'man #'woman))
 
 ;; =============================================================================
 ;; 6. TEXT MANIPULATION & EDITING SHORTCUTS (Tsoding & Matklad)
@@ -202,6 +216,17 @@
 
 (keymap-set prog-mode-map "C-p" #'rc/format-buffer)
 
+;; Fast Header <-> Source file flip (C-c o):
+(keymap-set prog-mode-map "C-c o" #'ff-find-other-file)
+
+;; C/C++ Macro Preprocessor Expansion (C-c C-e):
+(with-eval-after-load 'c-ts-mode
+  (when (boundp 'c-ts-base-mode-map)
+    (keymap-set c-ts-base-mode-map "C-c C-e" #'c-macro-expand)))
+(with-eval-after-load 'cc-mode
+  (when (boundp 'c-mode-base-map)
+    (keymap-set c-mode-base-map "C-c C-e" #'c-macro-expand)))
+
 ;; =============================================================================
 ;; 7. PROJECT FILE EXPLORER (TREEMACS)
 ;; =============================================================================
@@ -248,14 +273,15 @@
    ("M-s r"           . consult-ripgrep)
    ("C-c f g"         . consult-ripgrep)))
 
-(use-package better-jumper
-  :bind
-  (("M-[" . better-jumper-jump-backward)
-   ("M-]" . better-jumper-jump-forward))
-  :config
-  (better-jumper-mode 1)
-  (with-eval-after-load 'xref
-    (advice-add #'xref-push-marker-stack :override #'better-jumper-set-jump)))
+;; Standard Jump Navigation (Built-in Xref):
+;; - M-. : jump to definition (xref-find-definitions)
+;; - M-, : jump back to previous location (xref-go-back)
+;; - M-? : find all references across the project (xref-find-references)
+
+;; Terminal Focus Event Safety:
+(unless (display-graphic-p)
+  (define-key input-decode-map "\e[I" [focus-in])
+  (define-key input-decode-map "\e[O" [focus-out]))
 
 ;; =============================================================================
 ;; 9. LANGUAGE SERVER PROTOCOL (EGLOT) & CODE INTELLIGENCE
@@ -271,6 +297,7 @@
          (zig-ts-mode  . eglot-ensure))
   :bind (:map eglot-mode-map
               ("M-."   . xref-find-definitions)
+              ("M-,"   . xref-go-back)
               ("M-?"   . xref-find-references)
               ("C-c r" . eglot-rename)
               ("C-c a" . eglot-code-actions)
@@ -280,7 +307,9 @@
   (eglot-sync-connect 0)
   (eglot-events-buffer-size 0)
   :config
-  (add-to-list 'eglot-ignored-server-capabilities :inlayHintProvider))
+  (add-to-list 'eglot-ignored-server-capabilities :inlayHintProvider)
+  ;; Disable on-type formatting so clangd won't reformat or move braces while typing
+  (add-to-list 'eglot-ignored-server-capabilities :documentOnTypeFormattingProvider))
 
 (add-hook 'before-save-hook
           (lambda ()

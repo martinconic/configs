@@ -35,10 +35,18 @@ A fast, lightweight, and educational configuration for **C, Go, and Zig** develo
 4. **Fast Navigation**:
    * **`C-x p f`**: Fuzzy project file finder.
    * **`M-s r`** / **`C-c f g`**: Project-wide ripgrep (`consult-ripgrep`).
-   * **`M-[` / `M-]`**: Backward / Forward jump history (`better-jumper`).
+   * **`M-.` / `M-,`**: Jump to definition (`xref-find-definitions`) / Jump back (`xref-go-back`).
    * **`C-x b`**: Live buffer switcher with previews.
 
-5. **Visual Themes**:
+5. **Systems Programming Toolkit (C, C++, POSIX, GDB)**:
+   * **`C-c o`**: Instantly flip between `.h` header and `.c` source (`ff-find-other-file`).
+   * **`C-c C-e`**: Expand C macro at point using compiler preprocessor (`c-macro-expand`).
+   * **`C-c m`**: Open Linux/POSIX system call & C library man page (`man`).
+   * **`M-x gdb`**: Visual 6-pane GDB debugging station (`gdb-many-windows`).
+   * **Code Hygiene**: 80-column ruler indicator & automatic trailing whitespace strip on save.
+   * **`M-x hexl-find-file`**: Hexadecimal / binary inspection side-by-side with ASCII.
+
+6. **Visual Themes**:
    * **Default:** `solarized-light`
    * Available: `naysayer`, `gruber-darker`, `gruvbox`, `doom-themes`.
    * Switch anytime with `M-x load-theme RET`.
